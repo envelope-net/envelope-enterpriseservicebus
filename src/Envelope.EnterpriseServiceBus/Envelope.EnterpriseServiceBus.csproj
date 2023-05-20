@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Envelope.EnterpriseServiceBus</PackageId>
+    <Description>Envelope.EnterpriseServiceBus</Description>
+    <PackageTags></PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/envelope-net/envelope-enterpriseservicebus</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/envelope-net/envelope-enterpriseservicebus</RepositoryUrl>
+    <PackageIcon>envelope_icon.png</PackageIcon>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Copyright>Copyright Envelope</Copyright>
+    <Authors>Tomas Pilat</Authors>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\Envelope.snk</AssemblyOriginatorKeyFile>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\envelope_icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Envelope.Hosting" Version="1.1.14" />
+    <PackageReference Include="Envelope.ServiceBus.Abstractions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Envelope.EnterpriseServiceBus.PostgreSql, PublicKey=0024000004800000940000000602000000240000525341310004000001000100c975d11897f48ee089d361a3cb8c8a9c0226136d480fa93c54f2855dc5e3cbd9791d40d5c3fd8a691c5e09a987af6f4f2521f29420149ff81918ad56da573c8181dc249d2cdaf670c96f338b0314f4538d3f969d8dd8c06a7663546567a99003ec2938915ed53e2d2db47da9d9c5a295f10cdc0b0f2af8dc75ca46e68665d8b1" />
+	</ItemGroup>
+
+</Project>
