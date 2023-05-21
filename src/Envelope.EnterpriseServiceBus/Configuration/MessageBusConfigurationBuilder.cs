@@ -9,7 +9,7 @@ using Envelope.ServiceBus.Messages.Resolvers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Envelope.MessageBus.Configuration;
+namespace Envelope.EnterpriseServiceBus.Configuration;
 
 public interface IMessageBusConfigurationBuilder<TBuilder, TObject>
 	where TBuilder : IMessageBusConfigurationBuilder<TBuilder, TObject>
