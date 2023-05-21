@@ -1,0 +1,61 @@
+﻿using Envelope.EnterpriseServiceBus.MessageHandlers;
+using Envelope.EnterpriseServiceBus.MessageHandlers.Logging;
+using Envelope.EnterpriseServiceBus.Messages;
+using Envelope.ServiceBus.Hosts;
+using Envelope.ServiceBus.Hosts.Logging;
+using Envelope.Text;
+using Envelope.Validation;
+
+namespace Envelope.EnterpriseServiceBus.Configuration.Internal;
+
+internal class EventBusOptions : IEventBusOptions, IValidable
+{
+	public IHostInfo HostInfo { get; set; }
+	public IHostLogger HostLogger { get; set; }
+	public IHandlerLogger HandlerLogger { get; set; }
+	public IMessageBodyProvider? EventBodyProvider { get; set; }
+	public IMessageHandlerResultFactory MessageHandlerResultFactory { get; set; }
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+	public EventBusOptions()
+	{
+	}
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
+	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	{
+		if (HostInfo == null)
+		{
+			if (parentErrorBuffer == null)
+				parentErrorBuffer = new List<IValidationMessage>();
+
+			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HostInfo))} == null"));
+		}
+
+		if (HostLogger == null)
+		{
+			if (parentErrorBuffer == null)
+				parentErrorBuffer = new List<IValidationMessage>();
+
+			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HostLogger))} == null"));
+		}
+
+		if (HandlerLogger == null)
+		{
+			if (parentErrorBuffer == null)
+				parentErrorBuffer = new List<IValidationMessage>();
+
+			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HandlerLogger))} == null"));
+		}
+
+		if (MessageHandlerResultFactory == null)
+		{
+			if (parentErrorBuffer == null)
+				parentErrorBuffer = new List<IValidationMessage>();
+
+			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(MessageHandlerResultFactory))} == null"));
+		}
+
+		return parentErrorBuffer;
+	}
+}

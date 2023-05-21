@@ -1,0 +1,9 @@
+﻿namespace Envelope.EnterpriseServiceBus.Orchestrations.Definition.Steps.Body;
+
+#if NET6_0_OR_GREATER
+[Envelope.Serializer.JsonPolymorphicConverter]
+#endif
+public interface IStepBody
+{
+	BodyType BodyType { get; }
+}
