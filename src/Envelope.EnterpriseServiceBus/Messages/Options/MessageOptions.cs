@@ -1,5 +1,4 @@
 ﻿using Envelope.ServiceBus.ErrorHandling;
-using Envelope.Text;
 using Envelope.Transactions;
 using Envelope.Validation;
 using System.Text;
@@ -55,25 +54,18 @@ public class MessageOptions : IMessageOptions, IValidable
 
 	public bool? ThrowNoHandlerException { get; set; }
 
-	/// <inheritdoc/>
-	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	public List<IValidationMessage>? Validate(
+		string? propertyPrefix = null,
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		if (string.IsNullOrWhiteSpace(ExchangeName))
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
+		validationBuilder ??= new ValidationBuilder();
+		validationBuilder.SetValidationMessages(propertyPrefix, globalValidationContext)
+			.IfNullOrWhiteSpace(ExchangeName)
+			.IfNullOrWhiteSpace(ContentType)
+			;
 
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ExchangeName))} == null"));
-		}
-
-		if (string.IsNullOrWhiteSpace(ContentType))
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ContentType))} == null"));
-		}
-
-		return parentErrorBuffer;
+		return validationBuilder.Build();
 	}
 }

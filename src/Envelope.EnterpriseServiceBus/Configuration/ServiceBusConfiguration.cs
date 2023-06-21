@@ -8,7 +8,6 @@ using Envelope.ServiceBus;
 using Envelope.ServiceBus.Hosts;
 using Envelope.ServiceBus.Hosts.Logging;
 using Envelope.ServiceBus.Messages.Resolvers;
-using Envelope.Text;
 using Envelope.Validation;
 
 namespace Envelope.EnterpriseServiceBus.Configuration;
@@ -39,82 +38,23 @@ public class ServiceBusConfiguration : IServiceBusConfiguration, IValidable
 
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	public List<IValidationMessage>? Validate(
+		string? propertyPrefix = null,
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		if (!ServiceBusMode.HasValue)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
+		validationBuilder ??= new ValidationBuilder();
+		validationBuilder.SetValidationMessages(propertyPrefix, globalValidationContext)
+			.IfNull(ServiceBusMode)
+			.If(HostInfo == null && string.IsNullOrWhiteSpace(ServiceBusName))
+			.IfNull(MessageTypeResolver)
+			.IfNull(HostLogger)
+			.IfNull(MessageHandlerContextType)
+			.IfNull(MessageHandlerContextFactory)
+			.IfNull(HandlerLogger)
+			;
 
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ServiceBusMode))} == null"));
-		}
-
-		if (HostInfo == null && string.IsNullOrWhiteSpace(ServiceBusName))
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ServiceBusName))} == null"));
-		}
-
-		if (MessageTypeResolver == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(MessageTypeResolver))} == null"));
-		}
-
-		if (HostLogger == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HostLogger))} == null"));
-		}
-
-		//kvoli tomu, ze sa neskor automaticky prida exchange pre orchestracie
-		//if (ExchangeProviderConfiguration == null)
-		//{
-		//	if (parentErrorBuffer == null)
-		//		parentErrorBuffer = new List<IValidationMessage>();
-
-		//	parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ExchangeProviderConfiguration))} == null"));
-		//}
-
-		//kvoli tomu, ze sa neskor automaticky prida queue pre orchestracie
-		//if (QueueProviderConfiguration == null)
-		//{
-		//	if (parentErrorBuffer == null)
-		//		parentErrorBuffer = new List<IValidationMessage>();
-
-		//	parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(QueueProviderConfiguration))} == null"));
-		//}
-
-		if (MessageHandlerContextType == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(MessageHandlerContextType))} == null"));
-		}
-
-		if (MessageHandlerContextFactory == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(MessageHandlerContextFactory))} == null"));
-		}
-
-		if (HandlerLogger == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HandlerLogger))} == null"));
-		}
-
-		return parentErrorBuffer;
+		return validationBuilder.Build();
 	}
 }

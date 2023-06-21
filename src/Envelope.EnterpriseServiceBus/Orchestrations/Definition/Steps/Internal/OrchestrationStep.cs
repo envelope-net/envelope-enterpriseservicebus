@@ -81,9 +81,14 @@ internal abstract class OrchestrationStep : IOrchestrationStep, IValidable
 		return errorHandlingController.GetRetryTimeSpan(retryCount);
 	}
 
-	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	public List<IValidationMessage>? Validate(
+		string? propertyPrefix = null,
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		return parentErrorBuffer;
+		validationBuilder ??= new ValidationBuilder();
+		return validationBuilder.Build();
 	}
 
 	public override string ToString()

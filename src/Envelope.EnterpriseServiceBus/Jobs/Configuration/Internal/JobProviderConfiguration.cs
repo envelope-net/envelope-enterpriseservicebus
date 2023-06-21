@@ -4,7 +4,6 @@ using Envelope.ServiceBus.Jobs.Configuration;
 using Envelope.ServiceBus.Jobs.Logging;
 using Envelope.ServiceBus.Queries;
 using Envelope.ServiceBus.Writers;
-using Envelope.Text;
 using Envelope.Validation;
 
 namespace Envelope.EnterpriseServiceBus.Jobs.Configuration.Internal;
@@ -31,49 +30,19 @@ internal class JobProviderConfiguration : IJobProviderConfiguration, IValidable
 
 	public List<IValidationMessage>? Validate(
 		string? propertyPrefix = null,
-		List<IValidationMessage>? parentErrorBuffer = null,
-		Dictionary<string, object>? validationContext = null)
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		if (HostInfoInternal == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
+		validationBuilder ??= new ValidationBuilder();
+		validationBuilder.SetValidationMessages(propertyPrefix, globalValidationContext)
+			.IfNull(HostInfoInternal)
+			.IfNull(JobRepository)
+			.IfNull(JobLogger)
+			.IfNull(ServiceBusReader)
+			.IfNull(JobMessageWriter)
+			;
 
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HostInfoInternal))} == null"));
-		}
-
-		if (JobRepository == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(JobRepository))} == null"));
-		}
-
-		if (JobLogger == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(JobLogger))} == null"));
-		}
-
-		if (ServiceBusReader == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ServiceBusReader))} == null"));
-		}
-
-		if (JobMessageWriter == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(JobMessageWriter))} == null"));
-		}
-
-		return parentErrorBuffer;
+		return validationBuilder.Build();
 	}
 }
