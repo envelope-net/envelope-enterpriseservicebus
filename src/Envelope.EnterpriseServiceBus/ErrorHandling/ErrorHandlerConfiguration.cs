@@ -2,7 +2,6 @@
 using Envelope.Exceptions;
 using Envelope.ServiceBus.Configuration;
 using Envelope.ServiceBus.ErrorHandling;
-using Envelope.Text;
 using Envelope.Validation;
 
 namespace Envelope.EnterpriseServiceBus.Configuration;
@@ -20,30 +19,23 @@ public class ErrorHandlerConfiguration : IErrorHandlerConfiguration, IValidable
 
 	public int? MaxRetryCount { get; set; }
 
-	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	public List<IValidationMessage>? Validate(
+		string? propertyPrefix = null,
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		if (DefaultRetryInterval <= TimeSpan.Zero)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
+		validationBuilder ??= new ValidationBuilder();
+		validationBuilder.SetValidationMessages(propertyPrefix, globalValidationContext)
+			.If(DefaultRetryInterval <= TimeSpan.Zero)
+			.If(MaxRetryCount < 0)
+			;
 
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(DefaultRetryInterval))} <= Zero"));
-		}
-
-		if (MaxRetryCount < 0)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(MaxRetryCount))} < 0"));
-		}
-
-		return parentErrorBuffer;
+		return validationBuilder.Build();
 	}
-
 	public IErrorHandlingController BuildErrorHandlingController()
 	{
-		var error = Validate(nameof(ErrorHandlerConfiguration))?.ToString();
+		var error = string.Join(" | ", Validate(nameof(ErrorHandlerConfiguration))?.Select(x => x.ToString()) ?? Array.Empty<string>());
 		if (!string.IsNullOrWhiteSpace(error))
 			throw new ConfigurationException(error);
 

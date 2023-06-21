@@ -4,7 +4,6 @@ using Envelope.Exceptions;
 using Envelope.ServiceBus.DistributedCoordinator;
 using Envelope.ServiceBus.ErrorHandling;
 using Envelope.ServiceBus.Hosts;
-using Envelope.Text;
 using Envelope.Validation;
 
 namespace Envelope.EnterpriseServiceBus.Orchestrations.Configuration.Internal;
@@ -44,80 +43,25 @@ internal class OrchestrationHostOptions : IOrchestrationHostOptions, IValidable
 		ErrorHandlingController = config.ErrorHandlerConfigurationBuilder.Build().BuildErrorHandlingController();
 	}
 
-	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	public List<IValidationMessage>? Validate(
+		string? propertyPrefix = null,
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		if (HostInfo == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
+		validationBuilder ??= new ValidationBuilder();
+		validationBuilder.SetValidationMessages(propertyPrefix, globalValidationContext)
+			.IfNull(HostInfo)
+			.IfNullOrWhiteSpace(HostName)
+			.IfNull(OrchestrationRegistry)
+			.IfNull(ExecutionPointerFactory)
+			.IfNull(OrchestrationRepositoryFactory)
+			.IfNull(DistributedLockProvider)
+			.IfNull(OrchestrationLogger)
+			.IfNull(EventPublisherFactory)
+			.IfNull(ErrorHandlingController)
+			;
 
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HostInfo))} == null"));
-		}
-
-		if (string.IsNullOrWhiteSpace(HostName))
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(HostName))} == null"));
-		}
-
-		if (OrchestrationRegistry == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(OrchestrationRegistry))} == null"));
-		}
-
-		if (ExecutionPointerFactory == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ExecutionPointerFactory))} == null"));
-		}
-
-		if (OrchestrationRepositoryFactory == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(OrchestrationRepositoryFactory))} == null"));
-		}
-
-		if (DistributedLockProvider == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(DistributedLockProvider))} == null"));
-		}
-
-		if (OrchestrationLogger == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(OrchestrationLogger))} == null"));
-		}
-
-		if (EventPublisherFactory == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(EventPublisherFactory))} == null"));
-		}
-
-		if (ErrorHandlingController == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(ErrorHandlingController))} == null"));
-		}
-
-		return parentErrorBuffer;
+		return validationBuilder.Build();
 	}
 }

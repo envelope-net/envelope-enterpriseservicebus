@@ -1,6 +1,5 @@
 ﻿using Envelope.EnterpriseServiceBus.Configuration;
 using Envelope.EnterpriseServiceBus.Queues;
-using Envelope.Text;
 using Envelope.Validation;
 
 namespace Envelope.EnterpriseServiceBus.Exchange.Configuration;
@@ -22,24 +21,18 @@ public class ExchangeProviderConfiguration : IExchangeProviderConfiguration, IVa
 	}
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-	public List<IValidationMessage>? Validate(string? propertyPrefix = null, List<IValidationMessage>? parentErrorBuffer = null, Dictionary<string, object>? validationContext = null)
+	public List<IValidationMessage>? Validate(
+		string? propertyPrefix = null,
+		ValidationBuilder? validationBuilder = null,
+		Dictionary<string, object>? globalValidationContext = null,
+		Dictionary<string, object>? customValidationContext = null)
 	{
-		if (FaultQueue == null)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
+		validationBuilder ??= new ValidationBuilder();
+		validationBuilder.SetValidationMessages(propertyPrefix, globalValidationContext)
+			.IfNull(FaultQueue)
+			.IfNullOrEmpty(Exchanges)
+			;
 
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(FaultQueue))} == null"));
-		}
-
-		if (Exchanges.Count == 0)
-		{
-			if (parentErrorBuffer == null)
-				parentErrorBuffer = new List<IValidationMessage>();
-
-			parentErrorBuffer.Add(ValidationMessageFactory.Error($"{StringHelper.ConcatIfNotNullOrEmpty(propertyPrefix, ".", nameof(Exchanges))} == null"));
-		}
-
-		return parentErrorBuffer;
+		return validationBuilder.Build();
 	}
 }
