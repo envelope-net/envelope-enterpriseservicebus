@@ -226,9 +226,9 @@ public partial class EventBus : IEventBus
 					return result.WithInvalidOperationException(traceInfo, $"Could not create handlerProcessor type for {eventType}");
 
 				var handlerResult = await handlerProcessor.HandleAsync(savedEvent.Message, handlerContext, ServiceProvider, unhandledExceptionDetail, cancellationToken).ConfigureAwait(false);
-				result.MergeAllHasError(handlerResult);
+				result.MergeAll(handlerResult);
 
-				if (result.HasError())
+				if (result.HasTransactionRollbackError())
 				{
 					transactionController.ScheduleRollback();
 				}

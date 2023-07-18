@@ -270,9 +270,9 @@ public partial class MessageBus : IMessageBus
 					return result.WithInvalidOperationException(traceInfo, $"Could not create handlerProcessor type for {requestMessageType}");
 
 				var handlerResult = await handlerProcessor.HandleAsync(savedMessage.Message, handlerContext, ServiceProvider, unhandledExceptionDetail, cancellationToken).ConfigureAwait(false);
-				result.MergeAllHasError(handlerResult);
+				result.MergeAll(handlerResult);
 
-				if (result.HasError())
+				if (result.HasTransactionRollbackError())
 				{
 					transactionController.ScheduleRollback();
 				}
@@ -368,7 +368,7 @@ public partial class MessageBus : IMessageBus
 		}
 
 		var sendResult = await SendInternalAsync(message, options, isLocalTransactionCoordinator, traceInfo, cancellationToken).ConfigureAwait(false);
-		result.MergeAllHasError(sendResult);
+		result.MergeAll(sendResult);
 
 		if (sendResult.Data != null)
 			result.WithData(sendResult.Data.Response);
@@ -534,9 +534,9 @@ public partial class MessageBus : IMessageBus
 					return result.WithInvalidOperationException(traceInfo, $"Could not create handlerProcessor type for {requestMessageType}");
 
 				var handlerResult = await handlerProcessor.HandleAsync(savedMessage.Message, handlerContext, ServiceProvider, traceInfo, SaveResponseMessageAsync, unhandledExceptionDetail, cancellationToken).ConfigureAwait(false);
-				result.MergeAllWithData(handlerResult);
+				result.MergeAll(handlerResult);
 
-				if (result.HasError())
+				if (result.HasTransactionRollbackError())
 				{
 					transactionController.ScheduleRollback();
 				}

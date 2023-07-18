@@ -190,7 +190,7 @@ public class MessageQueue<TMessage> : IMessageQueue<TMessage>, IQueueInfo, IDisp
 			else //is synchronous invocation
 			{
 				var handlerResult = await HandleMessageAsync(queuedMessage, traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-				result.MergeHasError(handlerResult);
+				result.MergeErrors(handlerResult);
 				if (handlerResult.Data?.Processed == false)
 					result.WithError(traceInfo, x => x.InternalMessage(handlerResult.Data.ToString()));
 			}
@@ -219,7 +219,7 @@ public class MessageQueue<TMessage> : IMessageQueue<TMessage>, IQueueInfo, IDisp
 				(IResult)result.WithInvalidOperationException(traceInfo, $"QueueName = {_messageQueueContext.QueueName} | {nameof(TryRemoveAsync)}: {nameof(IsPull)} = {IsPull}")).ConfigureAwait(false);
 
 		var removeResult = await _queue.TryRemoveAsync(message, traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-		result.MergeHasError(removeResult);
+		result.MergeErrors(removeResult);
 		return await PublishQueueEventAsync(
 			message,
 			traceInfo,
@@ -526,7 +526,7 @@ public class MessageQueue<TMessage> : IMessageQueue<TMessage>, IQueueInfo, IDisp
 		var hasError = handlerResult.ErrorResult?.HasError == true;
 		if (hasError)
 		{
-			result.MergeAllHasError(handlerResult.ErrorResult!);
+			result.MergeAll(handlerResult.ErrorResult!);
 			await _messageQueueContext.ServiceBusOptions.HostLogger.LogResultErrorMessagesAsync(_messageQueueContext.ServiceBusOptions.HostInfo, result.Build(), null, cancellationToken).ConfigureAwait(false);
 			await PublishQueueEventAsync(message, traceInfo, QueueEventType.OnMessage, result.Build()).ConfigureAwait(false);
 		}
@@ -578,7 +578,7 @@ public class MessageQueue<TMessage> : IMessageQueue<TMessage>, IQueueInfo, IDisp
 			async (traceInfo, transactionController, unhandledExceptionDetail, cancellationToken) =>
 			{
 				var updateResult = await _queue.UpdateAsync(message, update, traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-				if (updateResult.HasError)
+				if (updateResult.HasTransactionRollbackError)
 				{
 					transactionController.ScheduleRollback();
 				}

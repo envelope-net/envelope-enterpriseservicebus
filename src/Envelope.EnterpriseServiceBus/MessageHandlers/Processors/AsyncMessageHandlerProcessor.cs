@@ -83,14 +83,14 @@ internal class AsyncMessageHandlerProcessor<TRequestMessage, TResponse, TContext
 			}
 
 			var resultBuilder = new ResultBuilder<ISendResponse<TResponse>>();
-			resultBuilder.Merge(result);
+			resultBuilder.MergeAll(result);
 
 			IResult<ISendResponse<TResponse>> newResult;
 			if (result.Data != null)
 			{
 				var response = result.Data;
 				var saveResult = await saveResponseMessageAction(response, handlerContext, traceInfo, cancellationToken).ConfigureAwait(false);
-				resultBuilder.MergeHasError(saveResult);
+				resultBuilder.MergeErrors(saveResult);
 				newResult = resultBuilder.WithData(new SendResponse<TResponse>(handlerContext.MessageId, saveResult.Data, result.Data)).Build();
 			}
 			else

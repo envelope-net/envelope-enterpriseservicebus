@@ -25,7 +25,7 @@
 //		var traceInfo = TraceInfo.Create(handlerContext.TraceInfo);
 
 //		var saveResult = await _orchestrationRepository.EnqueueAsync(@event, traceInfo, cancellationToken).ConfigureAwait(false);
-//		result.MergeHasError(saveResult);
+//		result.MergeErrors(saveResult);
 //		return result.Build();
 //	}
 
@@ -67,7 +67,7 @@ public static class OrchestrationEventHandler
 				traceInfo);
 
 		var saveResult = await orchestrationRepository.SaveNewEventAsync(@event, traceInfo, context.TransactionController, cancellationToken).ConfigureAwait(false);
-		result.MergeHasError(saveResult);
+		result.MergeErrors(saveResult);
 
 		//var executionPointerFactory = context.ServiceProvider?.GetRequiredService<IExecutionPointerFactory>();
 		//if (executionPointerFactory == null)

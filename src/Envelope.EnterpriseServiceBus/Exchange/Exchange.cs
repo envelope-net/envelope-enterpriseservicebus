@@ -191,10 +191,10 @@ public class Exchange<TMessage> : IExchange<TMessage>, IQueueInfo, IDisposable, 
 			var brokerResult = await _exchangeContext.MessageBrokerHandler.HandleAsync(exchangeMessage, _exchangeContext, transactionController, cancellationToken).ConfigureAwait(false);
 
 			if (brokerResult.ErrorResult?.HasError == true)
-				result.MergeHasError(brokerResult.ErrorResult!);
+				result.MergeErrors(brokerResult.ErrorResult!);
 
 			var handlerResult = await ProcessMessageHandlerResultAsync(exchangeMessage, traceInfo, brokerResult, transactionController, cancellationToken).ConfigureAwait(false);
-			result.MergeHasError(handlerResult);
+			result.MergeErrors(handlerResult);
 			if (handlerResult.Data?.Processed == false)
 				result.WithError(traceInfo, x => x.InternalMessage(handlerResult.Data.ToString()));
 
@@ -219,7 +219,7 @@ public class Exchange<TMessage> : IExchange<TMessage>, IQueueInfo, IDisposable, 
 			return result.WithInvalidOperationException(traceInfo, $"ExchangeName = {_exchangeContext.ExchangeName}", new ObjectDisposedException(GetType().FullName));
 
 		var removeResult = await _queue.TryRemoveAsync(message, traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-		result.MergeHasError(removeResult);
+		result.MergeErrors(removeResult);
 		return
 			await PublishExchangeEventAsync(
 				message,
@@ -489,7 +489,7 @@ public class Exchange<TMessage> : IExchange<TMessage>, IQueueInfo, IDisposable, 
 
 		if (hasError)
 		{
-			result.MergeAllHasError(brokerResult.ErrorResult!);
+			result.MergeAll(brokerResult.ErrorResult!);
 			await _exchangeContext.ServiceBusOptions.HostLogger.LogResultErrorMessagesAsync(_exchangeContext.ServiceBusOptions.HostInfo, result.Build(), null, cancellationToken).ConfigureAwait(false);
 			await PublishExchangeEventAsync(message, traceInfo, ExchangeEventType.OnMessage, result.Build()).ConfigureAwait(false);
 		}
@@ -546,7 +546,7 @@ public class Exchange<TMessage> : IExchange<TMessage>, IQueueInfo, IDisposable, 
 			async (traceInfo, transactionController, unhandledExceptionDetail, cancellationToken) =>
 			{
 				var updateResult = await _queue.UpdateAsync(message, update, traceInfo, transactionController, cancellationToken).ConfigureAwait(false);
-				if (updateResult.HasError)
+				if (updateResult.HasTransactionRollbackError)
 				{
 					transactionController.ScheduleRollback();
 				}

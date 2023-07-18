@@ -250,9 +250,9 @@ internal class ServiceBus : IServiceBus
 					exchangeContext = contextResult.Data!;
 
 					var exchangeEnqueueResult = await exchange.EnqueueAsync(message, exchangeContext, transactionController, cancellationToken).ConfigureAwait(false);
-					result.MergeHasError(exchangeEnqueueResult);
+					result.MergeErrors(exchangeEnqueueResult);
 
-					if (exchangeEnqueueResult.HasError)
+					if (exchangeEnqueueResult.HasTransactionRollbackError)
 					{
 						transactionController.ScheduleRollback();
 					}
@@ -335,9 +335,9 @@ internal class ServiceBus : IServiceBus
 				{
 					var context = _options.ExchangeProvider.CreateFaultQueueContext(traceInfo, options);
 					var enqueueResult = await _options.ExchangeProvider.FaultQueue.EnqueueAsync(message, context, transactionController, cancellationToken).ConfigureAwait(false);
-					result.MergeAllHasError(enqueueResult);
+					result.MergeAll(enqueueResult);
 
-					if (enqueueResult.HasError)
+					if (enqueueResult.HasTransactionRollbackError)
 					{
 						transactionController.ScheduleRollback();
 					}
